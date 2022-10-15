@@ -7,7 +7,6 @@ import subprocess
 
 from github import Github
 from dataclasses import dataclass, asdict
-from getpass import getpass
 from rich import print
 from rich.text import Text
 from rich.panel import Panel
@@ -178,7 +177,7 @@ def configure(reset: bool = False):
         "Visit https://github.com/settings/tokens/new and obtain a personal access token."
     )
     print("[magenta]Be sure to select 'repo' scope!")
-    github_token = getpass("GitHub token: ")
+    github_token = typer.prompt("GitHub token", hide_input=True)
 
     c = Config(org_name, working_dir, github_token)
 
