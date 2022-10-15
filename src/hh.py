@@ -11,6 +11,7 @@ from getpass import getpass
 from rich import print
 from rich.text import Text
 from rich.panel import Panel
+from rich.syntax import Syntax
 
 
 APP_NAME = "hh"
@@ -48,8 +49,16 @@ def load_config():
     data = json.load(config_path.open())
     return Config(**data)
 
+def _get_local_dirs(assignment_name: str, student_name: typing.Optional[str]):
+    config = load_config()
+    path = config.working_path()
+    if not student_name:
+        dirs = path.glob(assignment_name + "-*")
+    else:
+        dirs = [path / (assignment_name + "-" + student_name)]
+    return dirs
 
-def force_color(command: list[str]) -> list[str]:
+def _force_color(command: list[str]) -> list[str]:
     """a hack to work around subprocess.run losing color"""
 
     # special rules for git
@@ -105,19 +114,14 @@ def run(
     success_only: bool = False,
 ):
     """run a local command within each student repo"""
-    config = load_config()
-    path = config.working_path()
-    if not student_name:
-        dirs = path.glob(assignment_name + "-*")
-    else:
-        dirs = [path / (assignment_name + "-" + student_name)]
+    dirs = _get_local_dirs(assignment_name, student_name)
 
     # break apart command for subprocess
     command = command.split()
     # TODO: consider disabling capture_output via flag (to avoid color loss)
     capture_output = True
     if capture_output:
-        command = force_color(command)
+        command = _force_color(command)
 
     for match in dirs:
         if not capture_output:
@@ -137,6 +141,23 @@ def run(
                     title=f"[bold white]{match.name}",
                 )
             )
+
+
+@app.command()
+def show(
+    filename: str,
+    assignment_name: str,
+    student_name: typing.Optional[str] = typer.Argument(None),
+):
+    """view a file for each student repo"""
+    dirs = _get_local_dirs(assignment_name, student_name)
+    for path in dirs:
+        print(
+            Panel(
+                Syntax.from_path(path / filename),
+                title=f"[bold white]{path.name}/{filename}",
+            )
+        )
 
 
 @app.command()
