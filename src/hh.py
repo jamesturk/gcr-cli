@@ -132,6 +132,7 @@ def run(
         ):
             print(
                 Panel(
+                    Text.from_ansi(result.stderr.decode()) +
                     Text.from_ansi(result.stdout.decode()),
                     title=f"[bold white]{match.name}",
                 )
