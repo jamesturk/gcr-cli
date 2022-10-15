@@ -113,6 +113,7 @@ def run(
     student_name: typing.Optional[str] = typer.Argument(None),
     errors_only: bool = False,
     success_only: bool = False,
+    wait: bool = False,
 ):
     """run a local command within each student repo"""
     dirs = _get_local_dirs(assignment_name, student_name)
@@ -140,8 +141,11 @@ def run(
                     Text.from_ansi(result.stderr.decode())
                     + Text.from_ansi(result.stdout.decode()),
                     title=f"[bold white]{match.name}",
+                    subtitle="press <Enter> to continue" if wait else "",
                 )
             )
+            if wait:
+                typer.prompt("", show_default=False, default="y", prompt_suffix="")
 
 
 @app.command()
@@ -149,6 +153,7 @@ def show(
     filename: str,
     assignment_name: str,
     student_name: typing.Optional[str] = typer.Argument(None),
+    wait: bool = False,
 ):
     """view a file for each student repo"""
     dirs = _get_local_dirs(assignment_name, student_name)
@@ -157,8 +162,11 @@ def show(
             Panel(
                 Syntax.from_path(path / filename),
                 title=f"[bold white]{path.name}/{filename}",
+                subtitle="press <Enter> to continue" if wait else "",
             )
         )
+        if wait:
+            typer.prompt("", show_default=False, default="y", prompt_suffix="")
 
 
 @app.command()
