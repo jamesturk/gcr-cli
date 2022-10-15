@@ -8,6 +8,7 @@ import subprocess
 from github import Github
 from dataclasses import dataclass, asdict
 from getpass import getpass
+
 old_print = print
 from rich import print
 
@@ -33,7 +34,7 @@ class Config:
         try:
             return Github(self.github_token).get_organization(self.org_name)
         except Exception as e:
-            print(f"[red]Could not authenticate for github.com/{org_name}")
+            print(f"[red]Could not authenticate for github.com/{self.org_name}")
             print(e)
             exit()
 
@@ -49,11 +50,28 @@ def load_config():
 
 
 def force_color(command: list[str]) -> list[str]:
-    known_commands = {"git": "--color=always", "pytest": "--color=yes"}
+    """a hack to work around subprocess.run losing color"""
+
+    # special rules for git
+    if command[0] == "git":
+        return (
+            command[:1]
+            + [
+                "-c",
+                "color.ui=always",
+                "-c",
+                "color.diff=always",
+                "-c",
+                "color.status=always",
+            ]
+            + command[1:]
+        )
+    known_commands = {"pytest": "--color=yes"}
     colorize = known_commands.get(command[0])
     if colorize:
         return command + [colorize]
     return command
+
 
 @app.command()
 def checkout(
@@ -96,21 +114,21 @@ def run(
 
     # break apart command for subprocess
     command = command.split()
+    capture_output = errors_only or success_only
+    if capture_output:
+        command = force_color(command)
 
     for match in dirs:
-        capture_output = errors_only or success_only
-
-        if capture_output:
-            command = force_color(command)
-        else:
+        if not capture_output:
             print(f"[bold white]{match.name}")
 
         result = subprocess.run(command, cwd=match, capture_output=capture_output)
 
-        if (errors_only and result.returncode != 0) or (success_only and result.returncode == 0):
+        if (errors_only and result.returncode != 0) or (
+            success_only and result.returncode == 0
+        ):
             print(f"[bold white]{match.name}")
             old_print(result.stdout.decode())
-
 
 
 @app.command()
@@ -119,18 +137,18 @@ def configure(reset: bool = False):
     app_dir = typer.get_app_dir(APP_NAME)
     config_path: pathlib.Path = pathlib.Path(app_dir) / "config.json"
     if config_path.is_file() and not reset:
-        print(f"{config_path} already exists, pass --reset to overwrite")
+        print(f"[red]{config_path} already exists, pass --reset to overwrite")
         exit()
 
     default_working_dir = "~/hh-workdir"
-    working_dir = typer.prompt(f"Working directory [{default_working_dir}]:")
+    working_dir = typer.prompt(f"Working directory", default=default_working_dir)
     if not working_dir:
         working_dir = default_working_dir
-    org_name = typer.prompt("GitHub organization:")
+    org_name = typer.prompt("GitHub organization")
     print(
         "Visit https://github.com/settings/tokens/new and obtain a personal access token."
     )
-    print("   Be sure to select scope 'repo'")
+    print("[magenta]Be sure to select 'repo' scope!")
     github_token = getpass("GitHub token: ")
 
     c = Config(org_name, working_dir, github_token)
@@ -139,7 +157,7 @@ def configure(reset: bool = False):
     c.github_org()
 
     json.dump(asdict(c), config_path.open("w"))
-    print(f"Successfully configured, writing {config_path}")
+    print(f"[green]Successfully configured, writing '{config_path}'")
 
 
 if __name__ == "__main__":
