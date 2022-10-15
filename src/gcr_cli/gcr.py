@@ -4,6 +4,8 @@ import typing
 import pathlib
 import json
 import subprocess
+import shlex
+import shutil
 
 from github import Github
 from dataclasses import dataclass, asdict
@@ -119,7 +121,7 @@ def run(
     dirs = _get_local_dirs(assignment_name, student_name)
 
     # break apart command for subprocess
-    command = command.split()
+    command = shlex.split(command)
     # TODO: consider disabling capture_output via flag (to avoid color loss)
     capture_output = True
     if capture_output:
@@ -167,6 +169,16 @@ def show(
         )
         if wait:
             typer.prompt("", show_default=False, default="y", prompt_suffix="")
+
+
+@app.command()
+def update_file(assignment_name: str, newfile: pathlib.Path, filepath: str):
+    """update a file in each student repo"""
+    dirs = _get_local_dirs(assignment_name, None)
+    print("copying", newfile, "to:")
+    for path in dirs:
+        print("    ", path / filepath)
+        shutil.copy(newfile, path / filepath)
 
 
 @app.command()
