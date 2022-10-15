@@ -48,6 +48,13 @@ def load_config():
     return Config(**data)
 
 
+def force_color(command: list[str]) -> list[str]:
+    known_commands = {"git": "--color=always", "pytest": "--color=yes"}
+    colorize = known_commands.get(command[0])
+    if colorize:
+        return command + [colorize]
+    return command
+
 @app.command()
 def checkout(
     assignment_name: str,
@@ -86,12 +93,19 @@ def run(
         dirs = path.glob(assignment_name + "-*")
     else:
         dirs = [path / (assignment_name + "-" + student_name)]
+
+    # break apart command for subprocess
+    command = command.split()
+
     for match in dirs:
         capture_output = errors_only or success_only
-        if not capture_output:
+
+        if capture_output:
+            command = force_color(command)
+        else:
             print(f"[bold white]{match.name}")
 
-        result = subprocess.run(command.split(), cwd=match, capture_output=capture_output)
+        result = subprocess.run(command, cwd=match, capture_output=capture_output)
 
         if (errors_only and result.returncode != 0) or (success_only and result.returncode == 0):
             print(f"[bold white]{match.name}")
