@@ -69,7 +69,26 @@ def checkout(
 
 
 @app.command()
+def run(
+    command: str,
+    assignment_name: str,
+    student_name: typing.Optional[str] = typer.Argument(None),
+):
+    """run a local command within each student repo"""
+    config = load_config()
+    path = config.working_path()
+    if not student_name:
+        dirs = path.glob(assignment_name + "-*")
+    else:
+        dirs = [path / (assignment_name + "-" + student_name)]
+    for match in dirs:
+        print(f"[bold white]{match.name}")
+        subprocess.run(command.split(), cwd=match)
+
+
+@app.command()
 def configure(reset: bool = False):
+    """initial configuration"""
     app_dir = typer.get_app_dir(APP_NAME)
     config_path: pathlib.Path = pathlib.Path(app_dir) / "config.json"
     if config_path.is_file() and not reset:
