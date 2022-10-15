@@ -8,6 +8,7 @@ import subprocess
 from github import Github
 from dataclasses import dataclass, asdict
 from getpass import getpass
+old_print = print
 from rich import print
 
 
@@ -75,6 +76,8 @@ def run(
     command: str,
     assignment_name: str,
     student_name: typing.Optional[str] = typer.Argument(None),
+    errors_only: bool = False,
+    success_only: bool = False,
 ):
     """run a local command within each student repo"""
     config = load_config()
@@ -84,8 +87,16 @@ def run(
     else:
         dirs = [path / (assignment_name + "-" + student_name)]
     for match in dirs:
-        print(f"[bold white]{match.name}")
-        subprocess.run(command.split(), cwd=match)
+        capture_output = errors_only or success_only
+        if not capture_output:
+            print(f"[bold white]{match.name}")
+
+        result = subprocess.run(command.split(), cwd=match, capture_output=capture_output)
+
+        if (errors_only and result.returncode != 0) or (success_only and result.returncode == 0):
+            print(f"[bold white]{match.name}")
+            old_print(result.stdout.decode())
+
 
 
 @app.command()
