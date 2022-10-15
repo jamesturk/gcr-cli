@@ -13,6 +13,7 @@ hh = 'hh:app'
 python = "^3.8"
 typer = "^0.6.1"
 pygithub = "^1.56"
+rich = "^12.6.0"
 
 [tool.poetry.group.dev.dependencies]
 pytest = "^7.1.3"

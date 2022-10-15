@@ -8,6 +8,7 @@ import subprocess
 from github import Github
 from dataclasses import dataclass, asdict
 from getpass import getpass
+from rich import print
 
 
 APP_NAME = "hh"
@@ -31,7 +32,7 @@ class Config:
         try:
             return Github(self.github_token).get_organization(self.org_name)
         except Exception as e:
-            print("Could not authenticate for github.com/{org_name}")
+            print(f"[red]Could not authenticate for github.com/{org_name}")
             print(e)
             exit()
 
@@ -40,7 +41,7 @@ def load_config():
     app_dir = typer.get_app_dir(APP_NAME)
     config_path: pathlib.Path = pathlib.Path(app_dir) / "config.json"
     if not config_path.is_file():
-        print(f"Could not open {config_path}")
+        print(f"[red]Could not open '{config_path}', run '{APP_NAME} configure'")
         exit()
     data = json.load(config_path.open())
     return Config(**data)
@@ -52,10 +53,11 @@ def checkout(
     student_name: typing.Optional[str] = typer.Argument(None),
     all: bool = False,
 ):
+    """checkout student repositories"""
     config = load_config()
     org = config.github_org()
     if (not student_name and not all) or (student_name and all):
-        print("must provide either student_name or explicitly pass --all")
+        print("[red]must provide either student_name or explicitly pass --all")
         exit()
     elif student_name:
         repos = [org.get_repo(assignment_name + "-" + student_name)]
@@ -96,10 +98,10 @@ def configure(reset: bool = False):
         exit()
 
     default_working_dir = "~/hh-workdir"
-    working_dir = input(f"Working directory [{default_working_dir}]: ")
+    working_dir = typer.prompt(f"Working directory [{default_working_dir}]:")
     if not working_dir:
         working_dir = default_working_dir
-    org_name = input("GitHub organization: ")
+    org_name = typer.prompt("GitHub organization:")
     print(
         "Visit https://github.com/settings/tokens/new and obtain a personal access token."
     )
