@@ -140,7 +140,7 @@ def configure(reset: bool = False):
         exit()
 
     default_working_dir = "~/hh-workdir"
-    working_dir = typer.prompt(f"Working directory", default=default_working_dir)
+    working_dir = typer.prompt("Working directory", default=default_working_dir)
     if not working_dir:
         working_dir = default_working_dir
     org_name = typer.prompt("GitHub organization")
