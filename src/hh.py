@@ -10,6 +10,7 @@ from dataclasses import dataclass, asdict
 from getpass import getpass
 from rich import print
 from rich.text import Text
+from rich.panel import Panel
 
 
 APP_NAME = "hh"
@@ -113,7 +114,8 @@ def run(
 
     # break apart command for subprocess
     command = command.split()
-    capture_output = errors_only or success_only
+    # TODO: consider disabling capture_output via flag (to avoid color loss)
+    capture_output = True
     if capture_output:
         command = force_color(command)
 
@@ -121,13 +123,19 @@ def run(
         if not capture_output:
             print(f"[bold white]{match.name}")
 
-        result = subprocess.run(command, cwd=match, capture_output=capture_output)
+        result = subprocess.run(command, cwd=match, capture_output=True)
 
         if (errors_only and result.returncode != 0) or (
-            success_only and result.returncode == 0
+            success_only
+            and result.returncode == 0
+            or (not success_only and not errors_only)
         ):
-            print(f"[bold white]{match.name}")
-            print(Text.from_ansi(result.stdout.decode()))
+            print(
+                Panel(
+                    Text.from_ansi(result.stdout.decode()),
+                    title=f"[bold white]{match.name}",
+                )
+            )
 
 
 @app.command()
