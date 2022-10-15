@@ -48,6 +48,7 @@ def load_config():
     data = json.load(config_path.open())
     return Config(**data)
 
+
 def _get_local_dirs(assignment_name: str, student_name: typing.Optional[str]):
     config = load_config()
     path = config.working_path()
@@ -56,6 +57,7 @@ def _get_local_dirs(assignment_name: str, student_name: typing.Optional[str]):
     else:
         dirs = [path / (assignment_name + "-" + student_name)]
     return dirs
+
 
 def _force_color(command: list[str]) -> list[str]:
     """a hack to work around subprocess.run losing color"""
@@ -135,8 +137,8 @@ def run(
         ):
             print(
                 Panel(
-                    Text.from_ansi(result.stderr.decode()) +
-                    Text.from_ansi(result.stdout.decode()),
+                    Text.from_ansi(result.stderr.decode())
+                    + Text.from_ansi(result.stdout.decode()),
                     title=f"[bold white]{match.name}",
                 )
             )
