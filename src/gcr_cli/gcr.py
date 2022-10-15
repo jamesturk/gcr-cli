@@ -13,7 +13,7 @@ from rich.panel import Panel
 from rich.syntax import Syntax
 
 
-APP_NAME = "hh"
+APP_NAME = "gcr"
 
 app = typer.Typer()
 
@@ -178,7 +178,7 @@ def configure(reset: bool = False):
         print(f"[red]{config_path} already exists, pass --reset to overwrite")
         exit()
 
-    default_working_dir = "~/hh-workdir"
+    default_working_dir = f"~/{APP_NAME}-workdir"
     working_dir = typer.prompt("Working directory", default=default_working_dir)
     if not working_dir:
         working_dir = default_working_dir

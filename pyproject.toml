@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "hh"
+name = "gcr-cli"
 version = "0.1.0"
 description = "A helper for working with GitHub classroom."
 authors = ["James Turk <dev@jamesturk.net>"]
@@ -7,7 +7,7 @@ license = "MIT"
 readme = "README.md"
 
 [tool.poetry.scripts]
-hh = 'hh:app'
+gcr = 'gcr_cli.gcr:app'
 
 [tool.poetry.dependencies]
 python = "^3.8"
