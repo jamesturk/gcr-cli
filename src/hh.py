@@ -8,9 +8,8 @@ import subprocess
 from github import Github
 from dataclasses import dataclass, asdict
 from getpass import getpass
-
-old_print = print
 from rich import print
+from rich.text import Text
 
 
 APP_NAME = "hh"
@@ -128,7 +127,7 @@ def run(
             success_only and result.returncode == 0
         ):
             print(f"[bold white]{match.name}")
-            old_print(result.stdout.decode())
+            print(Text.from_ansi(result.stdout.decode()))
 
 
 @app.command()
