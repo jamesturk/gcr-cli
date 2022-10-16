@@ -2,14 +2,20 @@
 
 `gcr` is a command-line toolkit for GitHub Classroom.
 
-Features:
+## Features
 
 - Checkout latest versions of all student repositories for a given assignment.
 - Run local commands within student repositories with option to view per-repository output or see in aggregate.
 - Push post-assignment updates by copying local files into all student repositories at once with a single command.
 - GitHub token based authentication.
 
-## Usage Example
+## Installation
+
+For now, download and run via `poetry`.
+
+Will be `pip`/`pipx` installable once I have a chance to stabilize the API.
+
+## Usage Examples
 
 Configure `gcr` with your GitHub organization name, a local working directory, and your GitHub token.
 
