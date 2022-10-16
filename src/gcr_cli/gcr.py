@@ -42,7 +42,7 @@ class Config:
         except Exception as e:
             print(f"[red]Could not authenticate for github.com/{self.org_name}")
             print(e)
-            exit()
+            exit(1)
 
 
 def load_config():
@@ -50,7 +50,7 @@ def load_config():
     config_path: pathlib.Path = pathlib.Path(app_dir) / "config.json"
     if not config_path.is_file():
         print(f"[red]Could not open '{config_path}', run '{APP_NAME} configure'")
-        exit()
+        exit(1)
     data = json.load(config_path.open())
     return Config(**data)
 
@@ -100,7 +100,7 @@ def checkout(
     org = config.github_org()
     if (not student_name and not all) or (student_name and all):
         print("[red]must provide either student_name or explicitly pass --all")
-        exit()
+        exit(1)
     elif student_name:
         repos = [org.get_repo(assignment_name + "-" + student_name)]
     else:
@@ -108,8 +108,16 @@ def checkout(
             r for r in org.get_repos() if r.name.rsplit("-", 1)[0] == assignment_name
         ]
 
+    working_path = config.working_path()
+    exists = 0
+    checked_out = 0
     for repo in repos:
-        subprocess.run(["git", "clone", repo.ssh_url], cwd=config.working_path())
+        if (working_path / repo.name).exists():
+            exists += 1
+            continue
+        subprocess.run(["git", "clone", repo.ssh_url], cwd=working_path)
+        checked_out += 1
+    print(f"[green]{checked_out} new repositories[/], {exists} already existed.")
 
 
 @app.command()
@@ -244,7 +252,7 @@ def configure(reset: bool = False):
     config_path: pathlib.Path = pathlib.Path(app_dir) / "config.json"
     if config_path.is_file() and not reset:
         print(f"[red]{config_path} already exists, pass --reset to overwrite")
-        exit()
+        exit(1)
 
     default_working_dir = f"~/{APP_NAME}-workdir"
     working_dir = typer.prompt("Working directory", default=default_working_dir)
