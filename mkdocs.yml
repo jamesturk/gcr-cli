@@ -3,3 +3,5 @@ theme:
   name: material
 markdown_extensions:
   - mkdocs-click
+  - codehilite
+
