@@ -1,10 +1,12 @@
 #!/usr/bin/env python
 import typer
 import typing
+import time
 import pathlib
 import json
 import subprocess
 import shlex
+import statistics
 import shutil
 
 from github import Github
@@ -12,7 +14,9 @@ from dataclasses import dataclass, asdict
 from rich import print
 from rich.text import Text
 from rich.panel import Panel
+from rich.table import Table
 from rich.syntax import Syntax
+from rich.progress import track
 
 
 APP_NAME = "gcr"
@@ -51,11 +55,11 @@ def load_config():
     return Config(**data)
 
 
-def _get_local_dirs(assignment_name: str, student_name: typing.Optional[str]):
+def _get_local_dirs(assignment_name: str, student_name: typing.Optional[str] = None):
     config = load_config()
     path = config.working_path()
     if not student_name:
-        dirs = path.glob(assignment_name + "-*")
+        dirs = list(path.glob(assignment_name + "-*"))
     else:
         dirs = [path / (assignment_name + "-" + student_name)]
     return dirs
@@ -151,6 +155,58 @@ def run(
 
 
 @app.command()
+def check(
+    command: str,
+    assignment_name: str,
+):
+    """run a local command within each student repo and aggregate output"""
+    dirs = _get_local_dirs(assignment_name)
+
+    # break apart command for subprocess
+    command_pieces = shlex.split(command)
+
+    total_passing = 0
+    total_failing = 0
+    times = []
+
+    table = Table()
+    table.add_column("student")
+    table.add_column("success", justify="center")
+    table.add_column("time")
+
+    for sdir in track(dirs, description=f"Running '{command}'..."):
+        start_time = time.time()
+        result = subprocess.run(command_pieces, cwd=sdir, capture_output=True)
+        elapsed_time = time.time() - start_time
+        success = result.returncode == 0
+
+        if success:
+            total_passing += 1
+        else:
+            total_failing += 1
+        times.append(elapsed_time)
+
+        table.add_row(
+            ("[green]" if success else "[red]") + sdir.name,
+            "[green]✓" if success else "[red]✗",
+            "{:.2f}s".format(elapsed_time),
+        )
+
+    grid = Table.grid()
+    grid.add_column()
+    grid.add_column(justify="right", min_width=8)
+    grid.add_row("[blue]Command", "  " + command)  # a bit of padding for command
+    grid.add_row("[green]Total Passing", str(total_passing))
+    grid.add_row("[red]Total Failing", str(total_failing))
+    grid.add_row("[bold white]Min Time", f"{min(times):.2f}s")
+    grid.add_row("[bold white]Max Time", f"{max(times):.2f}s")
+    grid.add_row("[bold white]Average Time", f"{statistics.mean(times):.2f}s")
+
+    print(table)
+    print(Panel.fit(grid, title="[bold white]Statistics"))
+
+
+@app.command()
 def show(
     filename: str,
     assignment_name: str,
@@ -174,7 +230,7 @@ def show(
 @app.command()
 def update_file(assignment_name: str, newfile: pathlib.Path, filepath: str):
     """update a file in each student repo"""
-    dirs = _get_local_dirs(assignment_name, None)
+    dirs = _get_local_dirs(assignment_name)
     print("copying", newfile, "to:")
     for path in dirs:
         print("    ", path / filepath)
