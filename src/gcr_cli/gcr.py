@@ -21,7 +21,8 @@ from rich.progress import track
 
 APP_NAME = "gcr"
 
-app = typer.Typer()
+# don't want to dump token to stdout
+app = typer.Typer(pretty_exceptions_show_locals=False)
 
 
 @dataclass
