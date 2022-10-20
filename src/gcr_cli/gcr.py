@@ -243,7 +243,8 @@ def update_file(assignment_name: str, newfile: pathlib.Path, filepath: str):
     print("copying", newfile, "to:")
     for path in dirs:
         print("    ", path / filepath)
-        shutil.copy(newfile, path / filepath)
+        if not newfile.samefile(path / filepath):
+            shutil.copy(newfile, path / filepath)
 
 
 @app.command()
