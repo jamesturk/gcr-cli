@@ -249,8 +249,8 @@ def update_file(assignment_name: str, newfile: pathlib.Path, filepath: str):
 @app.command()
 def configure(reset: bool = False):
     """initial configuration"""
-    app_dir = typer.get_app_dir(APP_NAME)
-    config_path: pathlib.Path = pathlib.Path(app_dir) / "config.json"
+    app_dir = pathlib.Path(typer.get_app_dir(APP_NAME))
+    config_path: pathlib.Path = app_dir / "config.json"
     if config_path.is_file() and not reset:
         print(f"[red]{config_path} already exists, pass --reset to overwrite")
         exit(1)
@@ -270,6 +270,7 @@ def configure(reset: bool = False):
 
     # test login before write
     c.github_org()
+    app_dir.mkdir(exist_ok=True)
 
     json.dump(asdict(c), config_path.open("w"))
     print(f"[green]Successfully configured, writing '{config_path}'")
