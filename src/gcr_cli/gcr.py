@@ -106,7 +106,7 @@ def checkout(
         repos = [org.get_repo(assignment_name + "-" + student_name)]
     else:
         repos = [
-            r for r in org.get_repos() if r.name.rsplit("-", 1)[0] == assignment_name
+            r for r in org.get_repos() if r.name.startswith(assignment_name + "-")
         ]
 
     working_path = config.working_path()
