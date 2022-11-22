@@ -123,8 +123,8 @@ def checkout(
 
 @app.command()
 def run(
-    command: str,
     assignment_name: str,
+    command: str,
     student_name: typing.Optional[str] = typer.Argument(None),
     errors_only: bool = False,
     success_only: bool = False,
@@ -165,8 +165,8 @@ def run(
 
 @app.command()
 def check(
-    command: str,
     assignment_name: str,
+    command: str,
 ):
     """run a local command within each student repo and aggregate output"""
     dirs = _get_local_dirs(assignment_name)
@@ -217,8 +217,8 @@ def check(
 
 @app.command()
 def show(
-    filename: str,
     assignment_name: str,
+    filename: str,
     student_name: typing.Optional[str] = typer.Argument(None),
     wait: bool = False,
 ):
